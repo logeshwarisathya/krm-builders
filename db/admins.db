@@ -1,0 +1,2 @@
+{"$$indexCreated":{"fieldName":"username","unique":true,"sparse":false}}
+{"username":"admin","password":"$2a$12$3Z.qdoc.qIre3RJsTFwKqOZ6w.cWKheVLN5VUYq9njB3r7FAKmgZO","name":"KRM Admin","email":"admin@krmbuilders.com","createdAt":{"$$date":1775484471744},"_id":"n4ljHVd3k5uh1R7o"}

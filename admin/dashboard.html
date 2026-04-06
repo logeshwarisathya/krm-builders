@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <title>Admin Dashboard — KRM Builders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#0b1f3a;--blue:#1458a8;--sky:#2e86de;--accent:#f5a623;
+      --light:#f0f6ff;--white:#fff;--gray:#6b7a90;--border:#dce8f5;
+      --sidebar:240px;--header:64px;
+      --green:#16a34a;--green-bg:#f0fdf4;--green-border:#86efac;
+      --red:#dc2626;--red-bg:#fef2f2;--red-border:#fca5a5;
+      --yellow:#d97706;--yellow-bg:#fffbeb;--yellow-border:#fde68a;
+    }
+    body{font-family:'DM Sans',sans-serif;background:#f4f7fb;color:var(--navy);min-height:100vh;display:flex;}
+
+    /* SIDEBAR */
+    .sidebar{
+      width:var(--sidebar);min-height:100vh;
+      background:var(--navy);position:fixed;top:0;left:0;bottom:0;
+      display:flex;flex-direction:column;z-index:200;
+      transition:.3s;
+    }
+    .sidebar-brand{
+      padding:20px 20px 16px;border-bottom:1px solid rgba(255,255,255,.08);
+      display:flex;align-items:center;gap:10px;
+    }
+    .brand-icon{width:38px;height:38px;background:var(--blue);border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .brand-icon svg{fill:white;width:20px;height:20px;}
+    .brand-name{font-size:.9rem;font-weight:700;color:white;line-height:1.2;}
+    .brand-sub{font-size:.65rem;color:rgba(255,255,255,.45);letter-spacing:.04em;}
+    .sidebar-nav{flex:1;padding:16px 0;overflow-y:auto;}
+    .nav-section{padding:8px 16px 4px;font-size:.65rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.3);}
+    .nav-item{
+      display:flex;align-items:center;gap:12px;
+      padding:10px 20px;cursor:pointer;transition:.2s;
+      color:rgba(255,255,255,.65);font-size:.88rem;font-weight:500;
+      border-left:3px solid transparent;
+    }
+    .nav-item:hover{color:white;background:rgba(255,255,255,.06);}
+    .nav-item.active{color:white;background:rgba(46,134,222,.2);border-left-color:var(--sky);}
+    .nav-item svg{width:18px;height:18px;fill:currentColor;flex-shrink:0;}
+    .nav-badge{margin-left:auto;background:var(--accent);color:white;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:10px;}
+    .sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,.08);}
+    .admin-profile{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+    .admin-avatar{width:34px;height:34px;background:var(--blue);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;color:white;flex-shrink:0;}
+    .admin-info .name{font-size:.85rem;font-weight:600;color:white;}
+    .admin-info .role{font-size:.7rem;color:rgba(255,255,255,.45);}
+    .logout-btn{
+      width:100%;padding:9px;border:1px solid rgba(255,255,255,.15);border-radius:8px;
+      background:transparent;color:rgba(255,255,255,.65);font-family:'DM Sans',sans-serif;
+      font-size:.83rem;cursor:pointer;transition:.2s;display:flex;align-items:center;justify-content:center;gap:6px;
+    }
+    .logout-btn:hover{background:rgba(255,255,255,.08);color:white;}
+    .logout-btn svg{fill:currentColor;width:15px;height:15px;}
+
+    /* MAIN */
+    .main{margin-left:var(--sidebar);flex:1;display:flex;flex-direction:column;min-height:100vh;}
+    .topbar{
+      height:var(--header);background:white;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0 28px;position:sticky;top:0;z-index:100;
+    }
+    .topbar-left{display:flex;align-items:center;gap:12px;}
+    .page-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:var(--navy);}
+    .topbar-right{display:flex;align-items:center;gap:12px;}
+    .topbar-btn{
+      padding:8px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:.83rem;
+      font-weight:600;cursor:pointer;transition:.2s;border:none;display:flex;align-items:center;gap:6px;
+    }
+    .btn-outline-sm{background:white;color:var(--navy);border:1.5px solid var(--border);}
+    .btn-outline-sm:hover{border-color:var(--sky);color:var(--sky);}
+    .btn-primary-sm{background:var(--blue);color:white;}
+    .btn-primary-sm:hover{background:var(--sky);}
+    .topbar-btn svg{fill:currentColor;width:15px;height:15px;}
+
+    /* CONTENT */
+    .content{padding:28px;flex:1;}
+
+    /* PANELS */
+    .panel{display:none;}
+    .panel.active{display:block;}
+
+    /* STATS CARDS */
+    .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-bottom:28px;}
+    .stat-card{
+      background:white;border-radius:14px;padding:22px 20px;
+      border:1px solid var(--border);transition:.25s;cursor:default;
+    }
+    .stat-card:hover{box-shadow:0 4px 20px rgba(20,88,168,.1);transform:translateY(-2px);}
+    .stat-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;}
+    .stat-icon{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;}
+    .stat-icon svg{width:22px;height:22px;fill:white;}
+    .stat-icon.blue{background:var(--blue);}
+    .stat-icon.sky{background:var(--sky);}
+    .stat-icon.green{background:var(--green);}
+    .stat-icon.orange{background:var(--accent);}
+    .stat-change{font-size:.75rem;font-weight:600;padding:3px 8px;border-radius:20px;}
+    .stat-change.up{background:var(--green-bg);color:var(--green);}
+    .stat-change.neu{background:var(--light);color:var(--gray);}
+    .stat-value{font-size:1.9rem;font-weight:700;color:var(--navy);line-height:1;}
+    .stat-label{font-size:.8rem;color:var(--gray);margin-top:4px;}
+
+    /* CHART */
+    .chart-row{display:grid;grid-template-columns:2fr 1fr;gap:18px;margin-bottom:28px;}
+    .card{background:white;border-radius:14px;border:1px solid var(--border);padding:24px;}
+    .card-title{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:4px;}
+    .card-subtitle{font-size:.8rem;color:var(--gray);margin-bottom:20px;}
+    .bar-chart{display:flex;align-items:flex-end;gap:8px;height:140px;}
+    .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;}
+    .bar{width:100%;border-radius:5px 5px 0 0;background:linear-gradient(to top,var(--blue),var(--sky));transition:.5s;min-height:4px;}
+    .bar-label{font-size:.65rem;color:var(--gray);white-space:nowrap;}
+    .bar-val{font-size:.7rem;font-weight:700;color:var(--navy);}
+    .donut-wrap{display:flex;flex-direction:column;gap:10px;}
+    .donut-item{display:flex;align-items:center;gap:10px;}
+    .donut-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+    .donut-label{font-size:.82rem;color:var(--navy);flex:1;}
+    .donut-val{font-size:.82rem;font-weight:700;color:var(--navy);}
+
+    /* LEADS TABLE */
+    .table-toolbar{
+      display:flex;align-items:center;gap:12px;margin-bottom:18px;
+      flex-wrap:wrap;
+    }
+    .search-wrap{position:relative;flex:1;min-width:200px;}
+    .search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);fill:var(--gray);width:16px;height:16px;}
+    .search-input{
+      width:100%;padding:9px 12px 9px 36px;border:1.5px solid var(--border);
+      border-radius:9px;font-family:'DM Sans',sans-serif;font-size:.87rem;
+      color:var(--navy);outline:none;transition:.2s;
+    }
+    .search-input:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(46,134,222,.1);}
+    .filter-select{
+      padding:9px 14px;border:1.5px solid var(--border);border-radius:9px;
+      font-family:'DM Sans',sans-serif;font-size:.87rem;color:var(--navy);
+      background:white;outline:none;cursor:pointer;
+    }
+    .table-wrap{overflow-x:auto;border-radius:14px;border:1px solid var(--border);}
+    table{width:100%;border-collapse:collapse;}
+    thead{background:var(--light);}
+    th{padding:12px 16px;text-align:left;font-size:.75rem;font-weight:700;color:var(--gray);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;}
+    td{padding:14px 16px;border-top:1px solid var(--border);font-size:.87rem;color:var(--navy);vertical-align:middle;}
+    tr:hover td{background:#fafcff;}
+    .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:600;}
+    .badge.new{background:#eff6ff;color:#1d4ed8;}
+    .badge.contacted{background:var(--yellow-bg);color:var(--yellow);}
+    .badge.closed{background:var(--green-bg);color:var(--green);}
+    .badge.high{background:#fff1f2;color:#be123c;}
+    .badge.normal{background:var(--light);color:var(--blue);}
+    .action-btn{
+      padding:5px 10px;border-radius:7px;font-size:.75rem;font-weight:600;
+      cursor:pointer;transition:.2s;border:1.5px solid var(--border);
+      background:white;color:var(--navy);display:inline-flex;align-items:center;gap:4px;
+    }
+    .action-btn:hover{border-color:var(--sky);color:var(--sky);}
+    .action-btn.danger:hover{border-color:var(--red);color:var(--red);}
+    .action-btn svg{fill:currentColor;width:13px;height:13px;}
+    .pagination{display:flex;align-items:center;gap:8px;margin-top:18px;justify-content:flex-end;}
+    .page-btn{
+      width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);
+      background:white;cursor:pointer;display:flex;align-items:center;justify-content:center;
+      font-size:.83rem;font-weight:600;color:var(--navy);transition:.2s;
+    }
+    .page-btn:hover,.page-btn.active{background:var(--blue);color:white;border-color:var(--blue);}
+    .page-btn:disabled{opacity:.4;cursor:not-allowed;}
+    .page-info{font-size:.82rem;color:var(--gray);}
+
+    /* MODAL */
+    .modal-overlay{
+      position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;
+      display:none;align-items:center;justify-content:center;padding:20px;
+    }
+    .modal-overlay.open{display:flex;}
+    .modal{
+      background:white;border-radius:18px;padding:32px;width:100%;max-width:520px;
+      max-height:90vh;overflow-y:auto;position:relative;
+      box-shadow:0 24px 80px rgba(0,0,0,.25);
+    }
+    .modal-close{
+      position:absolute;top:20px;right:20px;width:32px;height:32px;
+      background:var(--light);border:none;border-radius:8px;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:1.1rem;
+      color:var(--gray);transition:.2s;
+    }
+    .modal-close:hover{background:var(--border);color:var(--navy);}
+    .modal-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--navy);margin-bottom:20px;}
+    .detail-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+    .detail-row:last-child{border-bottom:none;}
+    .detail-label{font-size:.75rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.06em;min-width:90px;padding-top:2px;}
+    .detail-value{font-size:.9rem;color:var(--navy);flex:1;word-break:break-word;}
+    .modal-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+    .modal-btn{
+      flex:1;padding:10px;border-radius:9px;font-family:'DM Sans',sans-serif;
+      font-size:.87rem;font-weight:600;cursor:pointer;transition:.2s;border:none;
+      display:flex;align-items:center;justify-content:center;gap:6px;min-width:100px;
+    }
+    .modal-btn.primary{background:var(--blue);color:white;}
+    .modal-btn.primary:hover{background:var(--sky);}
+    .modal-btn.success{background:var(--green);color:white;}
+    .modal-btn.danger{background:var(--red);color:white;}
+    .modal-btn.secondary{background:var(--light);color:var(--navy);}
+    .modal-btn svg{fill:currentColor;width:15px;height:15px;}
+    .notes-textarea{
+      width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:9px;
+      font-family:'DM Sans',sans-serif;font-size:.87rem;color:var(--navy);
+      resize:vertical;min-height:80px;outline:none;margin-top:8px;transition:.2s;
+    }
+    .notes-textarea:focus{border-color:var(--sky);}
+
+    /* TOAST */
+    .toast{
+      position:fixed;bottom:24px;right:24px;z-index:1000;
+      background:var(--navy);color:white;padding:13px 20px;
+      border-radius:10px;font-size:.87rem;font-weight:500;
+      box-shadow:0 8px 24px rgba(0,0,0,.25);
+      display:none;align-items:center;gap:8px;max-width:320px;
+    }
+    .toast.show{display:flex;animation:slideUp .3s ease;}
+    .toast.success{background:var(--green);}
+    .toast.error{background:var(--red);}
+    @keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+
+    /* SETTINGS */
+    .settings-card{background:white;border-radius:14px;border:1px solid var(--border);padding:28px;max-width:500px;margin-bottom:20px;}
+    .settings-title{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:4px;}
+    .settings-desc{font-size:.83rem;color:var(--gray);margin-bottom:20px;}
+    .form-group{margin-bottom:16px;}
+    .form-group label{display:block;font-size:.82rem;font-weight:600;color:var(--navy);margin-bottom:6px;}
+    .form-group input{
+      width:100%;padding:11px 14px;border:1.5px solid var(--border);border-radius:9px;
+      font-family:'DM Sans',sans-serif;font-size:.9rem;color:var(--navy);outline:none;transition:.2s;
+    }
+    .form-group input:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(46,134,222,.1);}
+    .empty-state{text-align:center;padding:56px 20px;color:var(--gray);}
+    .empty-state svg{fill:var(--border);width:56px;height:56px;margin:0 auto 16px;}
+    .empty-state h3{font-size:1.1rem;color:var(--navy);margin-bottom:8px;}
+
+    /* RESPONSIVE */
+    @media(max-width:900px){
+      .stats-grid{grid-template-columns:1fr 1fr;}
+      .chart-row{grid-template-columns:1fr;}
+      .sidebar{transform:translateX(-100%);}
+      .sidebar.open{transform:translateX(0);}
+      .main{margin-left:0;}
+      .hamburger{display:flex!important;}
+    }
+    .hamburger{
+      display:none;flex-direction:column;gap:4px;cursor:pointer;
+      padding:4px;background:none;border:none;
+    }
+    .hamburger span{display:block;width:20px;height:2px;background:var(--navy);border-radius:2px;}
+    .overlay-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;}
+    .overlay-bg.show{display:block;}
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </div>
+    <div>
+      <div class="brand-name">KRM Builders</div>
+      <div class="brand-sub">Admin Panel</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Main</div>
+    <div class="nav-item active" onclick="showPanel('dashboard')">
+      <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" onclick="showPanel('leads')">
+      <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+      Enquiries
+      <span class="nav-badge" id="newBadge">0</span>
+    </div>
+    <div class="nav-section">Tools</div>
+    <div class="nav-item" onclick="exportCSV()">
+      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+      Export CSV
+    </div>
+    <div class="nav-item" onclick="showPanel('settings')">
+      <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+      Settings
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="admin-profile">
+      <div class="admin-avatar" id="adminAvatar">A</div>
+      <div class="admin-info">
+        <div class="name" id="adminName">Admin</div>
+        <div class="role">Administrator</div>
+      </div>
+    </div>
+    <button class="logout-btn" onclick="logout()">
+      <svg viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+      Sign Out
+    </button>
+  </div>
+</aside>
+
+<div class="overlay-bg" id="overlayBg" onclick="closeSidebar()"></div>
+
+<!-- MAIN -->
+<div class="main">
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-left">
+      <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
+        <span></span><span></span><span></span>
+      </button>
+      <div class="page-title" id="pageTitle">Dashboard</div>
+    </div>
+    <div class="topbar-right">
+      <button class="topbar-btn btn-outline-sm" onclick="exportCSV()">
+        <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+        Export CSV
+      </button>
+      <button class="topbar-btn btn-primary-sm" onclick="showPanel('leads')">
+        <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+        All Enquiries
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ═══════════ DASHBOARD PANEL ═══════════ -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon blue"><svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg></div>
+            <span class="stat-change neu">All Time</span>
+          </div>
+          <div class="stat-value" id="statTotal">—</div>
+          <div class="stat-label">Total Enquiries</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon sky"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+            <span class="stat-change up">New</span>
+          </div>
+          <div class="stat-value" id="statNew">—</div>
+          <div class="stat-label">New Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon orange"><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div>
+            <span class="stat-change neu">In Progress</span>
+          </div>
+          <div class="stat-value" id="statContacted">—</div>
+          <div class="stat-label">Contacted</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-top">
+            <div class="stat-icon green"><svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg></div>
+            <span class="stat-change neu">Done</span>
+          </div>
+          <div class="stat-value" id="statClosed">—</div>
+          <div class="stat-label">Closed / Won</div>
+        </div>
+      </div>
+
+      <div class="chart-row">
+        <div class="card">
+          <div class="card-title">Leads — Last 7 Days</div>
+          <div class="card-subtitle">Daily enquiry volume</div>
+          <div class="bar-chart" id="barChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">By Service</div>
+          <div class="card-subtitle">Enquiry breakdown</div>
+          <div class="donut-wrap" id="donutWrap"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="margin-bottom:16px;">Recent Enquiries</div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th><th>Phone</th><th>Service</th><th>Status</th><th>Date</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="recentTbody">
+              <tr><td colspan="6" style="text-align:center;padding:32px;color:var(--gray);">Loading…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ LEADS PANEL ═══════════ -->
+    <div class="panel" id="panel-leads">
+      <div class="table-toolbar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" class="search-input" id="searchInput" placeholder="Search name, phone, email…" oninput="debounceSearch()"/>
+        </div>
+        <select class="filter-select" id="statusFilter" onchange="loadLeads(1)">
+          <option value="all">All Statuses</option>
+          <option value="new">New</option>
+          <option value="contacted">Contacted</option>
+          <option value="closed">Closed</option>
+        </select>
+        <select class="filter-select" id="serviceFilter" onchange="loadLeads(1)">
+          <option value="all">All Services</option>
+          <option value="dtcp">DTCP Approval</option>
+          <option value="2d">2D Layout</option>
+          <option value="3d">3D Visualization</option>
+          <option value="land">Land Registration</option>
+          <option value="construction">Construction Planning</option>
+          <option value="survey">Site Survey</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th><th>Name</th><th>Phone</th><th>Email</th>
+              <th>Service</th><th>Priority</th><th>Status</th><th>Date</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="leadsTbody">
+            <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--gray);">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- ═══════════ SETTINGS PANEL ═══════════ -->
+    <div class="panel" id="panel-settings">
+      <div class="settings-card">
+        <div class="settings-title">Change Password</div>
+        <div class="settings-desc">Update your admin password. Use at least 8 characters.</div>
+        <div class="form-group">
+          <label>Current Password</label>
+          <input type="password" id="curPwd" placeholder="Current password"/>
+        </div>
+        <div class="form-group">
+          <label>New Password</label>
+          <input type="password" id="newPwd" placeholder="New password (min 8 chars)"/>
+        </div>
+        <div class="form-group">
+          <label>Confirm New Password</label>
+          <input type="password" id="confPwd" placeholder="Confirm new password"/>
+        </div>
+        <button class="topbar-btn btn-primary-sm" onclick="changePassword()" style="margin-top:4px;">
+          Update Password
+        </button>
+      </div>
+      <div class="settings-card">
+        <div class="settings-title">SEO &amp; Website Info</div>
+        <div class="settings-desc">Quick links for your website's SEO assets.</div>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          <a href="/sitemap.xml" target="_blank" style="color:var(--sky);font-size:.9rem;">🗺️ View sitemap.xml</a>
+          <a href="/robots.txt" target="_blank" style="color:var(--sky);font-size:.9rem;">🤖 View robots.txt</a>
+          <a href="/" target="_blank" style="color:var(--sky);font-size:.9rem;">🌐 Open main website</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- LEAD DETAIL MODAL -->
+<div class="modal-overlay" id="leadModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">×</button>
+    <div class="modal-title" id="modalTitle">Enquiry Details</div>
+    <div id="modalBody"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ─── Auth (localStorage Basic Auth) ─────────────────────
+  const _token = localStorage.getItem('krm_auth');
+  const _name  = localStorage.getItem('krm_name') || 'Admin';
+  if (!_token) { window.location.href = '/admin/login'; }
+
+  function authHeaders(extra) {
+    return Object.assign({ 'Authorization': 'Basic ' + _token }, extra || {});
+  }
+
+  // ─── State ──────────────────────────────────────────────
+  let currentPage = 1;
+  let searchTimer = null;
+  let currentLeadId = null;
+
+  // ─── Init ────────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    // Show admin name from localStorage immediately
+    document.getElementById('adminName').textContent = _name;
+    document.getElementById('adminAvatar').textContent = _name[0].toUpperCase();
+    loadStats();
+    loadLeads(1);
+  });
+
+  // ─── Panel switching ─────────────────────────────────────
+  const panelTitles = { dashboard:'Dashboard', leads:'Enquiries', settings:'Settings' };
+  function showPanel(name) {
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('panel-' + name).classList.add('active');
+    document.getElementById('pageTitle').textContent = panelTitles[name] || name;
+    document.querySelectorAll('.nav-item').forEach(n => {
+      if (n.getAttribute('onclick') && n.getAttribute('onclick').includes("'" + name + "'")) n.classList.add('active');
+    });
+    closeSidebar();
+    if (name === 'leads') loadLeads(currentPage);
+    if (name === 'dashboard') loadStats();
+  }
+
+  // ─── Sidebar toggle ──────────────────────────────────────
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('overlayBg').classList.toggle('show');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlayBg').classList.remove('show');
+  }
+
+  // ─── Load dashboard stats ────────────────────────────────
+  async function loadStats() {
+    try {
+      const r = await fetch('/api/admin/stats', { headers: authHeaders() });
+      if (r.status === 401) return redirectLogin();
+      const d = await r.json();
+
+      document.getElementById('statTotal').textContent = d.total;
+      document.getElementById('statNew').textContent = d.newLeads;
+      document.getElementById('statContacted').textContent = d.contacted;
+      document.getElementById('statClosed').textContent = d.closed;
+      document.getElementById('newBadge').textContent = d.newLeads;
+      if (d.adminName) {
+        document.getElementById('adminName').textContent = d.adminName;
+        document.getElementById('adminAvatar').textContent = d.adminName[0].toUpperCase();
+      }
+
+      // Bar chart
+      const maxCount = Math.max(...d.daily.map(x => x.count), 1);
+      const barChart = document.getElementById('barChart');
+      barChart.innerHTML = d.daily.map(day => {
+        const h = Math.max((day.count / maxCount) * 120, day.count > 0 ? 8 : 4);
+        const label = new Date(day.date + 'T00:00:00').toLocaleDateString('en-IN',{weekday:'short'});
+        return `<div class="bar-wrap">
+          <div class="bar-val">${day.count}</div>
+          <div class="bar" style="height:${h}px"></div>
+          <div class="bar-label">${label}</div>
+        </div>`;
+      }).join('');
+
+      // Service donut
+      const colors = ['#1458a8','#2e86de','#f5a623','#16a34a','#dc2626','#7c3aed','#0891b2'];
+      const services = { dtcp:'DTCP Approval', '2d':'2D Layout', '3d':'3D Visual', land:'Land Reg.', construction:'Construction', survey:'Survey', other:'Other' };
+      const donut = document.getElementById('donutWrap');
+      const entries = Object.entries(d.serviceCounts).sort((a,b)=>b[1]-a[1]);
+      if (!entries.length) {
+        donut.innerHTML = '<p style="color:var(--gray);font-size:.85rem;">No data yet</p>';
+      } else {
+        donut.innerHTML = entries.slice(0,6).map(([k,v],i) => `
+          <div class="donut-item">
+            <div class="donut-dot" style="background:${colors[i%colors.length]}"></div>
+            <div class="donut-label">${services[k]||k}</div>
+            <div class="donut-val">${v}</div>
+          </div>`).join('');
+      }
+
+      // Recent table
+      const tbody = document.getElementById('recentTbody');
+      if (!d.recent.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--gray);">No enquiries yet. Share your website to get leads!</td></tr>';
+      } else {
+        tbody.innerHTML = d.recent.map(l => `
+          <tr>
+            <td><strong>${l.fname} ${l.lname||''}</strong></td>
+            <td>${l.phone}</td>
+            <td>${serviceLabel(l.service)}</td>
+            <td>${statusBadge(l.status)}</td>
+            <td>${fmtDate(l.createdAt)}</td>
+            <td><button class="action-btn" onclick="openLead('${l._id}')">
+              <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+              View
+            </button></td>
+          </tr>`).join('');
+      }
+    } catch(e) { console.error(e); }
+  }
+
+  // ─── Load leads table ────────────────────────────────────
+  async function loadLeads(page = 1) {
+    currentPage = page;
+    const search = document.getElementById('searchInput').value;
+    const status = document.getElementById('statusFilter').value;
+    const service = document.getElementById('serviceFilter').value;
+    const params = new URLSearchParams({ page, limit:20, search, status, service });
+
+    const tbody = document.getElementById('leadsTbody');
+    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--gray);">Loading…</td></tr>';
+
+    try {
+      const r = await fetch('/api/admin/leads?' + params, { headers: authHeaders() });
+      if (r.status === 401) return redirectLogin();
+      const d = await r.json();
+
+      if (!d.leads.length) {
+        tbody.innerHTML = `<tr><td colspan="9">
+          <div class="empty-state">
+            <svg viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+            <h3>No enquiries found</h3>
+            <p>Try changing your filters or share your website to get leads.</p>
+          </div>
+        </td></tr>`;
+      } else {
+        tbody.innerHTML = d.leads.map((l,i) => `
+          <tr>
+            <td style="color:var(--gray);font-size:.8rem;">${(page-1)*20+i+1}</td>
+            <td><strong>${l.fname} ${l.lname||''}</strong></td>
+            <td><a href="tel:${l.phone}" style="color:var(--sky);">${l.phone}</a></td>
+            <td style="color:var(--gray);font-size:.82rem;">${l.email||'—'}</td>
+            <td>${serviceLabel(l.service)}</td>
+            <td>${priorityBadge(l.priority)}</td>
+            <td>${statusBadge(l.status)}</td>
+            <td style="font-size:.8rem;color:var(--gray);white-space:nowrap;">${fmtDate(l.createdAt)}</td>
+            <td>
+              <div style="display:flex;gap:6px;">
+                <button class="action-btn" onclick="openLead('${l._id}')">
+                  <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                  View
+                </button>
+                <button class="action-btn danger" onclick="deleteLead('${l._id}')">
+                  <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+              </div>
+            </td>
+          </tr>`).join('');
+      }
+
+      // Pagination
+      const pg = document.getElementById('pagination');
+      if (d.pages <= 1) { pg.innerHTML=''; return; }
+      let html = `<span class="page-info">${d.total} total</span>`;
+      html += `<button class="page-btn" onclick="loadLeads(${page-1})" ${page<=1?'disabled':''}>‹</button>`;
+      for (let p=1; p<=d.pages; p++) {
+        if (p===1||p===d.pages||Math.abs(p-page)<=1) {
+          html += `<button class="page-btn ${p===page?'active':''}" onclick="loadLeads(${p})">${p}</button>`;
+        } else if (Math.abs(p-page)===2) { html += `<span style="padding:0 4px;color:var(--gray)">…</span>`; }
+      }
+      html += `<button class="page-btn" onclick="loadLeads(${page+1})" ${page>=d.pages?'disabled':''}>›</button>`;
+      pg.innerHTML = html;
+    } catch(e) { console.error(e); }
+  }
+
+  // ─── Open lead modal ──────────────────────────────────────
+  async function openLead(id) {
+    currentLeadId = id;
+    const r = await fetch('/api/admin/leads/' + id, { headers: authHeaders() });
+    if (r.status === 401) return redirectLogin();
+    const l = await r.json();
+
+    document.getElementById('modalTitle').textContent = `${l.fname} ${l.lname||''}`.trim();
+    document.getElementById('modalBody').innerHTML = `
+      <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value"><a href="tel:${l.phone}" style="color:var(--sky);">${l.phone}</a></span></div>
+      <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${l.email||'—'}</span></div>
+      <div class="detail-row"><span class="detail-label">Service</span><span class="detail-value">${serviceLabel(l.service)}</span></div>
+      <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value">${statusBadge(l.status)}</span></div>
+      <div class="detail-row"><span class="detail-label">Priority</span><span class="detail-value">${priorityBadge(l.priority)}</span></div>
+      <div class="detail-row"><span class="detail-label">Message</span><span class="detail-value">${l.message||'<em style="color:var(--gray)">No message</em>'}</span></div>
+      <div class="detail-row"><span class="detail-label">Submitted</span><span class="detail-value">${fmtDateFull(l.createdAt)}</span></div>
+      <div class="detail-row"><span class="detail-label">Notes</span>
+        <div style="flex:1">
+          <textarea class="notes-textarea" id="notesField" placeholder="Add internal notes…">${l.notes||''}</textarea>
+        </div>
+      </div>`;
+
+    document.getElementById('modalActions').innerHTML = `
+      <button class="modal-btn primary" onclick="updateStatus('${id}','contacted')">
+        <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+        Mark Contacted
+      </button>
+      <button class="modal-btn success" onclick="updateStatus('${id}','closed')">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        Mark Closed
+      </button>
+      <button class="modal-btn secondary" onclick="saveNotes('${id}')">
+        <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+        Save Notes
+      </button>
+      <button class="modal-btn danger" onclick="deleteLead('${id}',true)">
+        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12z"/></svg>
+        Delete
+      </button>`;
+
+    document.getElementById('leadModal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('leadModal').classList.remove('open');
+  }
+
+  // ─── Update status ────────────────────────────────────────
+  async function updateStatus(id, status) {
+    try {
+      const r = await fetch('/api/admin/leads/' + id, {
+        method:'PATCH',
+        headers: authHeaders({'Content-Type':'application/json'}),
+        body: JSON.stringify({ status })
+      });
+      if (!r.ok) throw new Error('Failed');
+      toast('Status updated to: ' + status, 'success');
+      closeModal();
+      loadLeads(currentPage);
+      loadStats();
+    } catch(e) { toast(e.message,'error'); }
+  }
+
+  // ─── Save notes ───────────────────────────────────────────
+  async function saveNotes(id) {
+    const notes = document.getElementById('notesField').value;
+    try {
+      const r = await fetch('/api/admin/leads/' + id, {
+        method:'PATCH',
+        headers: authHeaders({'Content-Type':'application/json'}),
+        body: JSON.stringify({ notes })
+      });
+      if (!r.ok) throw new Error('Failed');
+      toast('Notes saved!', 'success');
+    } catch(e) { toast(e.message,'error'); }
+  }
+
+  // ─── Delete lead ──────────────────────────────────────────
+  async function deleteLead(id, fromModal=false) {
+    if (!confirm('Delete this enquiry? This cannot be undone.')) return;
+    try {
+      const r = await fetch('/api/admin/leads/' + id, { method:'DELETE', headers: authHeaders() });
+      if (!r.ok) throw new Error('Failed');
+      toast('Enquiry deleted.', 'success');
+      if (fromModal) closeModal();
+      loadLeads(currentPage);
+      loadStats();
+    } catch(e) { toast(e.message,'error'); }
+  }
+
+  // ─── Export CSV ───────────────────────────────────────────
+  function exportCSV() {
+    const status = document.getElementById('statusFilter')?.value || 'all';
+    // Use fetch with auth header, then trigger download from blob
+    fetch('/api/admin/export/csv?status=' + status, { headers: authHeaders() })
+      .then(r => { if (r.status === 401) { redirectLogin(); return null; } return r.blob(); })
+      .then(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'krm-leads.csv'; a.click();
+        URL.revokeObjectURL(url);
+        toast('CSV download started!', 'success');
+      });
+  }
+
+  // ─── Change password ──────────────────────────────────────
+  async function changePassword() {
+    const cur = document.getElementById('curPwd').value;
+    const nw = document.getElementById('newPwd').value;
+    const conf = document.getElementById('confPwd').value;
+    if (!cur||!nw||!conf) return toast('Fill in all fields.','error');
+    if (nw !== conf) return toast('Passwords do not match.','error');
+    if (nw.length < 8) return toast('New password must be 8+ chars.','error');
+    try {
+      const r = await fetch('/api/admin/change-password',{
+        method:'POST',
+        headers: authHeaders({'Content-Type':'application/json'}),
+        body:JSON.stringify({currentPassword:cur,newPassword:nw})
+      });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error);
+      toast('Password updated! Please log in again.','success');
+      setTimeout(() => { logout(); }, 1500);
+    } catch(e) { toast(e.message,'error'); }
+  }
+
+  // ─── Logout ───────────────────────────────────────────────
+  function logout() {
+    localStorage.removeItem('krm_auth');
+    localStorage.removeItem('krm_name');
+    window.location.href = '/admin/login';
+  }
+
+  function redirectLogin() { window.location.href='/admin/login'; }
+
+  // ─── Search debounce ──────────────────────────────────────
+  function debounceSearch() {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadLeads(1), 400);
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────
+  function statusBadge(s) {
+    const map = {new:'badge new',contacted:'badge contacted',closed:'badge closed'};
+    const labels = {new:'● New',contacted:'◑ Contacted',closed:'✔ Closed'};
+    return `<span class="${map[s]||'badge'}">${labels[s]||s}</span>`;
+  }
+  function priorityBadge(p) {
+    if (p==='high'||p==='urgent') return `<span class="badge high">↑ ${p}</span>`;
+    return `<span class="badge normal">– normal</span>`;
+  }
+  function serviceLabel(s) {
+    const map={dtcp:'DTCP Approval','2d':'2D Layout','3d':'3D Visual',land:'Land Reg.',construction:'Construction',survey:'Survey',other:'Other'};
+    return map[s]||s||'—';
+  }
+  function fmtDate(d) {
+    return new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+  }
+  function fmtDateFull(d) {
+    return new Date(d).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  }
+  function toast(msg, type='') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'toast show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(()=>t.classList.remove('show'),3200);
+  }
+
+  // Close modal on overlay click
+  document.getElementById('leadModal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>

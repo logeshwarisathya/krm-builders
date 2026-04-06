@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Admin Login — KRM Builders</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --navy:#0b1f3a;--blue:#1458a8;--sky:#2e86de;--accent:#f5a623;
+      --light:#f0f6ff;--white:#fff;--gray:#6b7a90;--border:#dce8f5;
+      --error:#dc2626;--success:#16a34a;
+    }
+    body{
+      font-family:'DM Sans',sans-serif;
+      background:linear-gradient(135deg,var(--navy) 0%,#0f2d52 60%,#173d6e 100%);
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      padding:24px;
+    }
+    .card{
+      background:white;border-radius:20px;padding:48px 44px;
+      width:100%;max-width:420px;
+      box-shadow:0 24px 80px rgba(0,0,0,0.35);
+    }
+    .logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+    .logo-icon{width:48px;height:48px;background:var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .logo-icon svg{fill:white;width:26px;height:26px;}
+    .logo-text{font-size:1rem;font-weight:700;color:var(--navy);line-height:1.2;}
+    .logo-sub{font-size:0.7rem;color:var(--gray);}
+    h1{font-size:1.5rem;font-weight:700;color:var(--navy);margin-bottom:6px;}
+    .subtitle{font-size:0.88rem;color:var(--gray);margin-bottom:28px;}
+    .form-group{margin-bottom:18px;}
+    label{display:block;font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:6px;}
+    input{
+      width:100%;padding:13px 16px;border:1.5px solid var(--border);
+      border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.93rem;
+      color:var(--navy);background:white;outline:none;transition:.25s;
+    }
+    input:focus{border-color:var(--sky);box-shadow:0 0 0 3px rgba(46,134,222,.12);}
+    .btn{
+      width:100%;padding:14px;border:none;border-radius:10px;
+      background:var(--blue);color:white;font-family:'DM Sans',sans-serif;
+      font-size:1rem;font-weight:600;cursor:pointer;transition:.25s;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .btn:hover{background:var(--sky);}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+    .alert{
+      padding:12px 16px;border-radius:10px;font-size:0.87rem;
+      margin-bottom:18px;display:none;
+    }
+    .alert.error{background:#fef2f2;border:1px solid #fca5a5;color:var(--error);}
+    .alert.success{background:#f0fdf4;border:1px solid #86efac;color:var(--success);}
+    .alert.show{display:block;}
+    .divider{border:none;border-top:1px solid var(--border);margin:20px 0;}
+    .hint{font-size:0.78rem;color:var(--gray);text-align:center;}
+    .hint strong{color:var(--navy);}
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    .spin{animation:spin .8s linear infinite;display:inline-block;}
+  </style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">KRM Planner &amp; Builders</div>
+      <div class="logo-sub">Admin Panel</div>
+    </div>
+  </div>
+  <h1>Welcome back</h1>
+  <p class="subtitle">Sign in to manage your leads and enquiries.</p>
+  <div class="alert error" id="errAlert"></div>
+  <div>
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" id="username" placeholder="admin" autocomplete="username" />
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" id="password" placeholder="••••••••" autocomplete="current-password" />
+    </div>
+    <button type="button" class="btn" id="loginBtn">
+      Sign In
+    </button>
+  </div>
+  <hr class="divider" />
+  <p class="hint">Default: <strong>admin</strong> / <strong>admin@krm2024</strong></p>
+</div>
+<script>
+  // Redirect if already logged in
+  if (localStorage.getItem('krm_auth')) {
+    window.location.href = '/admin';
+  }
+
+  document.getElementById('loginBtn').addEventListener('click', async function() {
+    const err = document.getElementById('errAlert');
+    err.classList.remove('show');
+    const btn = this;
+    btn.innerHTML = '<span class="spin">⟳</span> Signing in…';
+    btn.disabled = true;
+
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!username || !password) {
+      err.textContent = 'Please enter username and password.';
+      err.classList.add('show');
+      btn.innerHTML = 'Sign In';
+      btn.disabled = false;
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error || 'Login failed');
+
+      // Store credentials for Basic Auth on subsequent requests
+      const token = btoa(username + ':' + password);
+      localStorage.setItem('krm_auth', token);
+      localStorage.setItem('krm_name', data.name || username);
+
+      window.location.href = '/admin';
+    } catch(ex) {
+      err.textContent = ex.message;
+      err.classList.add('show');
+      btn.innerHTML = 'Sign In';
+      btn.disabled = false;
+    }
+  });
+
+  // Also allow Enter key on password field
+  document.getElementById('password').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') document.getElementById('loginBtn').click();
+  });
+</script>
+</body>
+</html>
